@@ -6,6 +6,7 @@ import { MutableRefObject } from 'react';
 import { PagesConfig } from 'types/index';
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex, u8aToString, u8aUnwrapBytes } from '@polkadot/util';
+import { blake2AsU8a } from '@polkadot/util-crypto';
 
 export const clipAddress = (val: string) => {
   if (typeof val !== 'string') {
@@ -221,4 +222,94 @@ export const determinePoolDisplay = (adddress: string, batchItem: any) => {
   }
 
   return display;
+};
+
+// functions around identicon colors
+
+const blake2 = (value: Uint8Array) => blake2AsU8a(value, 512);
+let zeroHash = new Uint8Array();
+
+const addressToId = (address: string) => {
+  if (!zeroHash.length) {
+    zeroHash = blake2(new Uint8Array(32));
+  }
+
+  return blake2(decodeAddress(address)).map(
+    (x, i) => (x + 256 - zeroHash[i]) % 256
+  );
+};
+
+const SCHEMA = {
+  target: {
+    colors: [0, 28, 0, 0, 28, 0, 0, 28, 0, 0, 28, 0, 0, 28, 0, 0, 28, 0, 1],
+    freq: 1,
+  },
+  cube: {
+    colors: [0, 1, 3, 2, 4, 3, 0, 1, 3, 2, 4, 3, 0, 1, 3, 2, 4, 3, 5],
+    freq: 20,
+  },
+  quazar: {
+    colors: [1, 2, 3, 1, 2, 4, 5, 5, 4, 1, 2, 3, 1, 2, 4, 5, 5, 4, 0],
+    freq: 16,
+  },
+  flower: {
+    colors: [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 3],
+    freq: 32,
+  },
+  cyclic: {
+    colors: [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6],
+    freq: 32,
+  },
+  vmirror: {
+    colors: [0, 1, 2, 3, 4, 5, 3, 4, 2, 0, 1, 6, 7, 8, 9, 7, 8, 6, 10],
+    freq: 128,
+  },
+  hmirror: {
+    colors: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 8, 6, 7, 5, 3, 4, 2, 11],
+    freq: 128,
+  },
+};
+
+const findScheme = (d: any) => {
+  let cum = 0;
+  const schema = Object.values(SCHEMA).find((s: any) => {
+    cum += s.freq;
+    return d < cum;
+  });
+
+  if (!schema) {
+    throw new Error('Unable to find schema');
+  }
+
+  return schema;
+};
+
+export const getColors = (address: string): string[] => {
+  const total = Object.values(SCHEMA)
+    .map((s): number => s.freq)
+    .reduce((a, b): number => a + b);
+  const id = addressToId(address);
+  const d = Math.floor((id[30] + id[31] * 256) % total);
+  const rot = (id[28] % 6) * 3;
+  const sat = (Math.floor((id[29] * 70) / 256 + 26) % 80) + 30;
+  const scheme = findScheme(d);
+  const palette = Array.from(id).map((x, i): string => {
+    const b = (x + (i % 28) * 58) % 256;
+
+    if (b === 0) {
+      return '#444';
+    }
+    if (b === 255) {
+      return 'transparent';
+    }
+
+    const h = Math.floor(((b % 64) * 360) / 64);
+    const l = [53, 15, 35, 75][Math.floor(b / 64)];
+
+    return `hsl(${h}, ${sat}%, ${l}%)`;
+  });
+
+  return scheme.colors.map(
+    (_, i): string => palette[scheme.colors[i < 18 ? (i + rot) % 18 : 18]]
+  );
 };
