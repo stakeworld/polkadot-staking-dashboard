@@ -7,6 +7,8 @@ import { ButtonSubmit } from '@rossbulat/polkadot-dashboard-ui';
 import BN from 'bn.js';
 import { useApi } from 'contexts/Api';
 import { useNetworkMetrics } from 'contexts/Network';
+import { useErasToTimeLeft } from 'library/Hooks/useErasToTimeLeft';
+import { fromNow, timeleftAsString } from 'library/Hooks/useTimeLeft/utils';
 import useUnstaking from 'library/Hooks/useUnstaking';
 import { StatsWrapper, StatWrapper } from 'library/Modal/Wrappers';
 import { forwardRef } from 'react';
@@ -16,7 +18,7 @@ import { NotesWrapper, Separator } from '../Wrappers';
 import { ChunkWrapper, ContentWrapper } from './Wrappers';
 
 export const Overview = forwardRef(
-  ({ unlocking, bondType, setSection, setUnlock, setTask }: any, ref: any) => {
+  ({ unlocking, bondFor, setSection, setUnlock, setTask }: any, ref: any) => {
     const { network, consts } = useApi();
     const { metrics } = useNetworkMetrics();
     const { bondDuration } = consts;
@@ -25,7 +27,15 @@ export const Overview = forwardRef(
     const { isFastUnstaking } = useUnstaking();
     const { t } = useTranslation('modals');
 
-    const isStaking = bondType === 'stake';
+    const { getTimeLeftFromEras } = useErasToTimeLeft();
+    const durationSeconds = getTimeLeftFromEras(bondDuration);
+    const durationFormatted = timeleftAsString(
+      t,
+      fromNow(durationSeconds),
+      true
+    );
+
+    const isStaking = bondFor === 'nominator';
 
     let withdrawAvailable = new BN(0);
     let totalUnbonding = new BN(0);
@@ -148,7 +158,7 @@ export const Overview = forwardRef(
         })}
         <NotesWrapper>
           <p>
-            {t('unlockTake', { bondDuration })}
+            {t('unlockTake', { durationFormatted })}
             {isStaking ? `${t('rebondUnlock')}` : null}
           </p>
           {!isStaking ? <p>{t('unlockChunk')}</p> : null}
