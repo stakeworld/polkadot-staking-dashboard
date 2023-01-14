@@ -1,4 +1,4 @@
-// Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
+// Copyright 2023 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
@@ -31,7 +31,7 @@ export const Setup = () => {
               text={t('nominate.back')}
               iconLeft={faChevronLeft}
               iconTransform="shrink-3"
-              onClick={() => setOnNominatorSetup(0)}
+              onClick={() => setOnNominatorSetup(false)}
             />
           </span>
           <span>
@@ -39,7 +39,7 @@ export const Setup = () => {
               lg
               text={t('nominate.cancel')}
               onClick={() => {
-                setOnNominatorSetup(0);
+                setOnNominatorSetup(false);
                 setActiveAccountSetup('stake', defaultStakeSetup);
               }}
             />

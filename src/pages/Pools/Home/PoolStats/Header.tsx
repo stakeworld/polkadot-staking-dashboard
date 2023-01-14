@@ -1,4 +1,4 @@
-// Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
+// Copyright 2023 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import BN from 'bn.js';
@@ -35,10 +35,10 @@ export const Header = () => {
 
   let stateDisplay;
   switch (state) {
-    case 'blocked':
+    case 'Blocked':
       stateDisplay = t('pools.locked');
       break;
-    case 'destroying':
+    case 'Destroying':
       stateDisplay = t('pools.destroying');
       break;
     default:
